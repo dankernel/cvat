@@ -89,11 +89,15 @@ export default class LabelForm extends React.Component<Props> {
                         attrValues = [attrValues];
                     }
                 }
+                if (attrValues.length) {
+                    attrValues.push('');
+                }
                 attrValues = attrValues.map((value: string) => value.trim());
 
                 return {
                     ...attribute,
                     values: attrValues,
+                    default_value: attrValues[0],
                     input_type: attribute.type.toLowerCase(),
                 };
             }),
@@ -140,7 +144,6 @@ export default class LabelForm extends React.Component<Props> {
             <Form.Item
                 hasFeedback
                 name={[key, 'name']}
-                fieldKey={[fieldInstance.fieldKey, 'name']}
                 initialValue={value}
                 rules={[
                     {
@@ -165,7 +168,7 @@ export default class LabelForm extends React.Component<Props> {
 
         return (
             <CVATTooltip title='An HTML element representing the attribute'>
-                <Form.Item name={[key, 'type']} fieldKey={[fieldInstance.fieldKey, 'type']} initialValue={type}>
+                <Form.Item name={[key, 'type']} initialValue={type}>
                     <Select className='cvat-attribute-type-input' disabled={locked}>
                         <Select.Option value={AttributeType.SELECT} className='cvat-attribute-type-input-select'>
                             Select
@@ -213,7 +216,6 @@ export default class LabelForm extends React.Component<Props> {
             <CVATTooltip title='Press enter to add a new value'>
                 <Form.Item
                     name={[key, 'values']}
-                    fieldKey={[fieldInstance.fieldKey, 'values']}
                     initialValue={existingValues}
                     rules={[
                         {
@@ -236,8 +238,9 @@ export default class LabelForm extends React.Component<Props> {
         );
     }
 
-    private renderBooleanValueInput(fieldInstance: any): JSX.Element {
+    private renderBooleanValueInput(fieldInstance: any, attr: SerializedAttribute | null): JSX.Element {
         const { key } = fieldInstance;
+        const existingValues = attr ? attr.values[0] : 'false';
 
         return (
             <CVATTooltip title='Specify a default value'>
@@ -248,7 +251,6 @@ export default class LabelForm extends React.Component<Props> {
                             message: 'Please, specify a default value',
                         }]}
                     name={[key, 'values']}
-                    fieldKey={[fieldInstance.fieldKey, 'values']}
                 >
                     <Select className='cvat-attribute-values-input'>
                         <Select.Option value='false'>False</Select.Option>
@@ -265,6 +267,8 @@ export default class LabelForm extends React.Component<Props> {
         const value = attr ? attr.values : '';
 
         const validator = (_: any, strNumbers: string): Promise<void> => {
+            if (typeof strNumbers !== 'string') return Promise.resolve();
+
             const numbers = strNumbers.split(';').map((number): number => Number.parseFloat(number));
             if (numbers.length !== 3) {
                 return Promise.reject(new Error('Three numbers are expected'));
@@ -296,7 +300,6 @@ export default class LabelForm extends React.Component<Props> {
         return (
             <Form.Item
                 name={[key, 'values']}
-                fieldKey={[fieldInstance.fieldKey, 'values']}
                 initialValue={value}
                 rules={[
                     {
@@ -319,14 +322,14 @@ export default class LabelForm extends React.Component<Props> {
 
         if (attr?.input_type.toUpperCase() === 'TEXT') {
             return (
-                <Form.Item name={[key, 'values']} fieldKey={[fieldInstance.fieldKey, 'values']} initialValue={value}>
+                <Form.Item name={[key, 'values']} initialValue={value}>
                     <Input.TextArea className='cvat-attribute-values-input' placeholder='Default value' />
                 </Form.Item>
             );
         }
 
         return (
-            <Form.Item name={[key, 'values']} fieldKey={[fieldInstance.fieldKey, 'values']} initialValue={value}>
+            <Form.Item name={[key, 'values']} initialValue={value}>
                 <Input className='cvat-attribute-values-input' placeholder='Default value' />
             </Form.Item>
         );
@@ -341,7 +344,6 @@ export default class LabelForm extends React.Component<Props> {
             <CVATTooltip title='Can this attribute be changed frame to frame?'>
                 <Form.Item
                     name={[key, 'mutable']}
-                    fieldKey={[fieldInstance.fieldKey, 'mutable']}
                     initialValue={value}
                     valuePropName='checked'
                 >
